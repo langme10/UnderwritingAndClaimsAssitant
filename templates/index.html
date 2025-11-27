@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>AI Underwriting &amp; Claims Assistant</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    :root {
+      --bg-soft: #faf7ff;
+      --bg-card: #ffffff;
+      --border-subtle: #e5e7eb;
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --accent: #7c3aed;
+      --accent-soft: #a78bfa;
+      --accent-light-bg: #f5f3ff;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --danger-text: #991b1b;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(circle at top left, #ede9fe 0, #faf7ff 40%, #f9fafb 100%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1120px;
+      width: 100%;
+      padding: 32px 16px 40px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px 24px 28px;
+      box-shadow: 0 18px 45px rgba(79, 70, 229, 0.12);
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40px;
+      background: radial-gradient(circle at top right, rgba(167, 139, 250, 0.18), transparent 55%);
+      opacity: 0.8;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      margin-bottom: 4px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h1 span.logo-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, #faf5ff, var(--accent));
+      display: inline-block;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.3);
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    form {
+      margin-top: 12px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 999px;
+      padding: 6px 14px;
+      border: 1px solid #ddd6fe;
+      background: #f5f3ff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .pill:hover {
+      background: #ede9fe;
+      border-color: var(--accent-soft);
+      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.08);
+    }
+
+    .pill input {
+      accent-color: var(--accent);
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 190px;
+      border-radius: 14px;
+      border: 1px solid var(--border-subtle);
+      padding: 10px 12px;
+      background: #ffffff;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      resize: vertical;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent-soft);
+      box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.18);
+      background: #fdfbff;
+    }
+
+    textarea::placeholder {
+      color: #a1a1aa;
+    }
+
+    .btn-row {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 22px;
+      font-size: 0.95rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent-soft));
+      color: white;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 10px 24px rgba(124, 58, 237, 0.28);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, opacity 0.1s ease;
+    }
+
+    button:hover {
+      opacity: 0.98;
+      box-shadow: 0 12px 30px rgba(124, 58, 237, 0.35);
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 18px rgba(124, 58, 237, 0.22);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--accent-light-bg);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid #e5e7eb;
+      min-height: 170px;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .panel h2 {
+      font-size: 0.95rem;
+      margin: 0 0 6px;
+      color: #4b5563;
+      font-weight: 600;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+    }
+
+    .pill-badge {
+      padding: 4px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      background: #fefeff;
+      color: #4b5563;
+    }
+
+    .flash {
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--danger-bg);
+      color: var(--danger-text);
+      font-size: 0.85rem;
+      border: 1px solid var(--danger-border);
+    }
+
+    .small {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .footer-note {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 18px;
+      border-top: 1px dashed rgba(209, 213, 219, 0.8);
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="card-inner">
+        <h1>
+          <span class="logo-dot"></span>
+          AI Underwriting &amp; Claims Assistant
+        </h1>
+        <div class="subtitle">
+          Paste a claim description or underwriting report, choose a mode, and the assistant will
+          generate a structured summary plus a follow-up email for missing information.
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+          <div class="mode-toggle">
+            <label class="pill">
+              <input type="radio" name="mode" value="claim" {% if mode == 'claim' %}checked{% endif %}>
+              <span>🧾 Claim analysis</span>
+            </label>
+            <label class="pill">
+              <input type="radio" name="mode" value="underwriting" {% if mode == 'underwriting' %}checked{% endif %}>
+              <span>🏢 Underwriting / risk summary</span>
+            </label>
+          </div>
+
+          <textarea
+            name="input_text"
+            placeholder="Paste a claim narrative, loss description, or underwriting report here..."
+          >{{ input_text }}</textarea>
+
+          <div class="btn-row">
+            <button type="submit">Generate summary &amp; email</button>
+          </div>
+        </form>
+
+        <div class="grid">
+          <div>
+            <div class="panel">
+              <div class="badge-row">
+                <span class="pill-badge">Summary</span>
+                {% if mode == 'claim' %}
+                  <span class="pill-badge">Claims</span>
+                {% else %}
+                  <span class="pill-badge">Underwriting</span>
+                {% endif %}
+              </div>
+              <h2>Structured Output</h2>
+              {% if summary_output %}
+                <div>{{ summary_output }}</div>
+              {% else %}
+                <div class="small">Your AI-generated summary will appear here after you submit text.</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <div class="panel">
+              <div class="badge-row">
+                <span class="pill-badge">Follow-up email</span>
+                <span class="pill-badge">Next action</span>
+              </div>
+              <h2>Missing Info &amp; Draft Email</h2>
+              {% if email_output %}
+                <div>{{ email_output }}</div>
+              {% else %}
+                <div class="small">The missing-information checklist and email draft will appear here.</div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Prototype only — in a production environment, additional validation, governance, and privacy controls would apply.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
